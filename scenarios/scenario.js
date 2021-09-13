@@ -23,7 +23,8 @@ import { Trend } from 'k6/metrics';
 /* you can add some user metrics */
 //let durationTrendByTag = new Trend('Duration Trend by Tag');
 //let successRateByTag = new Rate('Success Rate by Tag');
-let serverWaitingTime = new Trend('serverWaitingTime', true);
+let firstRequestWaitingTime = new Trend('firstRequestWaitingTime', true);
+let secondRequestWaitingTime = new Trend('secondRequestWaitingTime', true);
 
 export let options = {
   scenarios: {
@@ -41,11 +42,19 @@ export let options = {
 export default function () {
   // our HTTP request, note that we are saving the response to res, which can be accessed later
 
-  const res = http.get("http://10.151.50.222/", {tags: {simple: "hi"}});
+  const resFirst = http.get("http://10.151.50.222/first", {tags: {request: "first"}});
   
-  serverWaitingTime.add(res.timings.waiting);
+  firstRequestWaitingTime.add(resFirst.timings.waiting);
 
-  const checkRes = check(res, {
+  const checkResFirst = check(resFirst, {
     "status is 200": (r) => r.status === 200,
   });
+
+  const resSecond = http.get("http://10.151.50.222/second", {tags: {request: "second"}});
+  
+  secondRequestWaitingTime.add(resSecond.timings.waiting);
+
+  const checkResSecond = check(resSecond, {
+    "status is 200": (r) => r.status === 200,
+  });  
 }
